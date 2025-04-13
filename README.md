@@ -33,7 +33,6 @@
 
 ### 🔐 이메일 인증 흐름
 
-```bash
 # 인증 코드 전송
 curl -X POST http://localhost:8000/auth/send-code \
   -H "Content-Type: application/json" \
@@ -67,3 +66,33 @@ python init_db.py
 
 # 4. FastAPI 서버 실행
 uvicorn app.main:app --reload
+
+🧠 개발 목표
+"실제 서비스에서 돌아갈 수 있는 인증 시스템"을 지향
+
+보안, 예외처리, 데이터 정합성을 직접 고민하고 반영
+
+클린 코드 + API 문서 자동화 + 협업 친화 구조
+
+✨ 향후 확장 계획
+✉️ SMTP 연동 통한 이메일 실전 발송
+
+🚀 Docker + GitHub Actions 자동 배포 연동
+
+📈 AI 기반 사용자 행동 분석 및 추천 기능 (흥미용 실험)
+
+👨‍💻 개발자 소개
+염창섭 | 실전 문제 해결형 백엔드 개발자
+
+"고객의 불편을 코드로 해결하는 개발자.
+기술에 감성과 시스템적 사고를 담습니다."
+
+📧 이메일: ckdtjqdlgh@gmail.com
+
+---
+
+## ✅ 다음 작업
+
+1. `.gitignore` 확인 (`venv`, `.db`, `.pyc`, `.env` 등 포함)
+2. GitHub 저장소 생성 (예: `fastapi-auth-system`)
+3. 리포에 올릴 커밋 메시지 예:
