@@ -26,6 +26,21 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Router
 router = APIRouter()
 
+# Redis 연결
+try:
+    r = redis.Redis(host='localhost', port=6379, db=0, socket_connect_timeout=1)
+    r.ping()  # Test connection
+except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError):
+    print("⚠️  Redis connection failed - email verification will not work")
+    r = None
+
+# Email verification models
+class EmailRequest(BaseModel):
+    email: str
+
+class VerificationCodeRequest(BaseModel):
+    email: str
+    code: str
 
 # Utility Functions
 def verify_password(plain_password, hashed_password):
@@ -119,32 +134,32 @@ def refresh_token(refresh: schemas.TokenRefresh, db: Session = Depends(database.
         traceback.print_exc()  # ✅ 여기에 전체 에러 트레이스 찍기
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-# Redis 연결
-r = redis.Redis(host='localhost', port=6379, db=0)
-
-router = APIRouter()
-
-class EmailRequest(BaseModel):
-    email: str
-
-class VerificationCodeRequest(BaseModel):
-    email: str
-    code: str
-
 # 이메일 인증 코드 생성 및 Redis에 저장
 @router.post("/send-code")
 def send_verification_code(request: EmailRequest):
+    if r is None:
+        raise HTTPException(status_code=503, detail="Email verification service is unavailable - Redis connection failed")
+    
     # 이메일로 인증 코드 생성
     code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))  # 6자리 코드
     # Redis에 코드 저장 (expiration 5분)
-    r.setex(request.email, timedelta(minutes=5), code)
+    try:
+        r.setex(request.email, timedelta(minutes=5), code)
+    except redis.exceptions.ConnectionError:
+        raise HTTPException(status_code=503, detail="Email verification service is unavailable")
 
     return {"message": "Verification code sent to your email", "code": code}  # 실제로는 이메일로 보내야 함
 
 # 입력된 코드 검증
 @router.post("/verify-code")
 def verify_code(request: VerificationCodeRequest):
-    stored_code = r.get(request.email)
+    if r is None:
+        raise HTTPException(status_code=503, detail="Email verification service is unavailable - Redis connection failed")
+    
+    try:
+        stored_code = r.get(request.email)
+    except redis.exceptions.ConnectionError:
+        raise HTTPException(status_code=503, detail="Email verification service is unavailable")
 
     if not stored_code:
         raise HTTPException(status_code=400, detail="Verification code has expired or not sent")
