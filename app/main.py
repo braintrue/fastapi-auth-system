@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 from app import auth, crud
-from app.auth import router as auth_router  # auth.py에 있는 router 객체 import
-from app.database import engine  # Import the engine object from your database module
-from app.routers import users  # ← users.py 위치
+from app.database import engine
+from app.routers import users
 
-app = FastAPI()
+app = FastAPI(
+    title="FastAPI Auth System",
+    description="🧠 RESTful 인증 API 시스템 - FastAPI 기반",
+    version="1.0.0"
+)
 
-app.include_router(auth.router, prefix="/auth")
-app.include_router(crud.router, prefix="/users")
-app.include_router(users.router)  # ✅ 반드시 추가!
-
-# auth 라우터 추가
-app.include_router(auth_router, prefix="/auth", tags=["auth"])
+# Router 등록
+app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+app.include_router(crud.router, prefix="/users", tags=["User Management"])
+app.include_router(users.router, tags=["User Profile"])
 
 print("🔥 Using DB at:", engine.url)
